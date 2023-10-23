@@ -1,0 +1,26 @@
+# Dependencias y módulos instalados
+node_modules/
+
+# Archivos de registro
+npm-debug.log
+yarn-error.log
+
+# Archivos generados
+dist/
+build/
+coverage/
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Sistemas de control de versiones
+.svn/
+.git/
+.hg/
+
+# Logs y archivos temporales
+logs/
+*.log
+*.swp
