@@ -45,8 +45,8 @@ const io = socketio(expressServer, {
 io.on('connection',  (socket)=>{
   console.log(socket.id, 'has connected');
 
-  socket.on("joinRoom", async(roomInfo, sendResponse) => {
-    const thisRoom = rooms[roomInfo.roomId];    
+  socket.on("joinRoom", async(roomId, sendResponse) => {
+    const thisRoom = rooms[roomId];    
     //leave all rooms, because the client can only be in one room
     const clientRooms = socket.rooms;
     let i = 0;
@@ -66,7 +66,18 @@ io.on('connection',  (socket)=>{
      sendResponse({
        numUsers: socketCount,
        history: thisRoom.history,
-       videoProvider: thisRoom.videoProvider
+       videoProvider: thisRoom.videoProvider,
+       host: thisRoom.username,
+       url: thisRoom.url,
+       roomId: thisRoom.roomId
      })
+  })
+
+  socket.on('newMessageToRoom', messageObj => {
+    const socketRooms = socket.rooms;
+    const currentRoom = [...socketRooms][1];
+    io.in(currentRoom).emit('roomMessage',messageObj)
+    const thisRoom = rooms[currentRoom];
+    thisRoom.addMessage(messageObj);
   })
 })
