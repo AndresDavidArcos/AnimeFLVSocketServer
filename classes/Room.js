@@ -1,5 +1,5 @@
 class Room{
-    constructor(roomId, roomName, avatar, username, url, videoProvider,lock = true, usersConnected = 1){
+    constructor(roomId, roomName, avatar, username, url, videoProvider,lock = true, usersConnected = 0){
         this.roomId = roomId;
         this.roomName = roomName;
         this.lock = lock;
@@ -32,6 +32,14 @@ class Room{
 
     clearHistory(){
         this.history = [];
+    }
+
+    increaseUserCount(){
+        this.usersConnected++;
+    }
+
+    decreaseUserCount(){
+        this.usersConnected--;
     }
 }
 
