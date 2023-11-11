@@ -69,7 +69,7 @@ io.on('connection',  (socket)=>{
 
   }) 
 
-  socket.on("joinRoom", async(roomId, sendResponse) => {
+  socket.on("joinRoom", (roomId, sendResponse) => {
     const thisRoom = rooms[roomId];
     if(thisRoom){
       thisRoom.increaseUserCount()   
@@ -85,6 +85,7 @@ io.on('connection',  (socket)=>{
        })
   
        socket.join(thisRoom.roomId);
+
        sendResponse({
          history: thisRoom.history,
          videoProvider: thisRoom.videoProvider,
@@ -93,15 +94,33 @@ io.on('connection',  (socket)=>{
          roomId: thisRoom.roomId
        })
     }else{
-      sendResponse({type: "error", msg: "La room a la que intenta entrar no existe"})
+      sendResponse({type: "error", message: "La room a la que intenta entrar no existe"})
     }
 
   })
 
   socket.on('newMessageToRoom', messageObj => {
     const [, currentRoom] = socket.rooms;
-    io.in(currentRoom).emit('roomMessage',messageObj)
     const thisRoom = rooms[currentRoom];
-    thisRoom.addMessage(messageObj);
+    if(thisRoom){
+      io.in(currentRoom).emit('roomMessage',messageObj)
+      thisRoom.addMessage(messageObj);
+    }else{
+      console.log("Usuario intento enviar mensaje en una room que no existe")
+    }
+    
+  })
+
+  socket.on('askCurrentVideoTime', async (roomId, sendResponse) => {
+    const timeoutVal = 12;
+    try {
+      const roomSockets = await io.in(roomId).fetchSockets();
+      const [firstUser] = roomSockets;
+      const currentTime = await io.in(firstUser.id).timeout(timeoutVal).emitWithAck('getCurrentVideoTime', 'N/A');
+      sendResponse(currentTime[0]);
+    } catch (error) {
+      console.log("error en askCurrentVideoTime: ", error)
+      sendResponse({type: "error", message: `Se excedio el limite de ${timeoutVal/1000} segundos para sincronizar el video.`});
+    }
   })
 })
