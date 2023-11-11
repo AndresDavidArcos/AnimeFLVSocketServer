@@ -111,15 +111,15 @@ io.on('connection',  (socket)=>{
     
   })
 
-  socket.on('askCurrentVideoTime', async (roomId, sendResponse) => {
-    const timeoutVal = 12;
+  socket.on('askCurrentVideoState', async (roomId, sendResponse) => {
+    const timeoutVal = 12000;
     try {
       const roomSockets = await io.in(roomId).fetchSockets();
       const [firstUser] = roomSockets;
-      const currentTime = await io.in(firstUser.id).timeout(timeoutVal).emitWithAck('getCurrentVideoTime', 'N/A');
-      sendResponse(currentTime[0]);
+      const currentState = await io.in(firstUser.id).timeout(timeoutVal).emitWithAck('getCurrentVideoState', 'N/A');
+      sendResponse(currentState[0]);
     } catch (error) {
-      console.log("error en askCurrentVideoTime: ", error)
+      console.log("error en askCurrentVideoState: ", error)
       sendResponse({type: "error", message: `Se excedio el limite de ${timeoutVal/1000} segundos para sincronizar el video.`});
     }
   })
