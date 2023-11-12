@@ -69,7 +69,7 @@ io.on('connection',  (socket)=>{
 
   }) 
 
-  socket.on("joinRoom", (roomId, sendResponse) => {
+  socket.on("joinRoom", (roomId, username, userType, sendResponse) => {
     const thisRoom = rooms[roomId];
     if(thisRoom){
       thisRoom.increaseUserCount()   
@@ -85,7 +85,8 @@ io.on('connection',  (socket)=>{
        })
   
        socket.join(thisRoom.roomId);
-
+       socket.data.username = username;
+       socket.data.userType = userType;
        sendResponse({
          history: thisRoom.history,
          videoProvider: thisRoom.videoProvider,
@@ -122,5 +123,29 @@ io.on('connection',  (socket)=>{
       console.log("error en askCurrentVideoState: ", error)
       sendResponse({type: "error", message: `Se excedio el limite de ${timeoutVal/1000} segundos para sincronizar el video.`});
     }
+  })
+
+  socket.on('videoStateChange', data => {
+    const [, currentRoom] = socket.rooms;
+    const thisRoom = rooms[currentRoom];
+    if(thisRoom){
+      switch (data.type) {
+        case 'play':
+          io.in(currentRoom).emit('updateVideoState', {type: 'play', senderId: socket.id, senderUsername: socket.data.username})
+          break;
+          case 'pause':
+            io.in(currentRoom).emit('updateVideoState', {type: 'pause', senderId: socket.id, senderUsername: socket.data.username})
+          break;
+          case 'time':
+          const time = data.time;
+          io.in(currentRoom).emit('updateVideoState', {type: 'time', time, senderId: socket.id, senderUsername: socket.data.username})
+          break;
+        default:
+          break;
+      }
+    }else{
+      console.log("Usuario emitio un evento de videoStateChange en una room que no existe.")
+    }
+
   })
 })
