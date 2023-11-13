@@ -14,7 +14,7 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
-const port = 9000;
+const port = process.env.PORT || 9000;
 const rooms = {};
 // rooms['maraton de one piece'] = new Room("UUID-GENERATED-STRING", "maraton de one piece", "female", "zoro", "https://www3.animeflv.net/ver/rurouni-kenshin-meiji-kenkaku-romantan-2023-17", "SW", true, 5);
 
