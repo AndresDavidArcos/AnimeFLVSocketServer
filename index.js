@@ -19,10 +19,13 @@ const rooms = {};
 // rooms['maraton de one piece'] = new Room("UUID-GENERATED-STRING", "maraton de one piece", "female", "zoro", "https://www3.animeflv.net/ver/rurouni-kenshin-meiji-kenkaku-romantan-2023-17", "SW", true, 5);
 
 app.get('/rooms', (req, res) => {
+  console.log("Req recivida rooms")
   res.status(200).send(rooms);
 });
 
 app.get('/rooms/:roomId', (req, res) => {
+  console.log("Req recivida /rooms/:roomId")
+
   const {roomId} = req.params;
   const thisRoom = rooms[roomId];
   if(thisRoom){
@@ -33,6 +36,8 @@ app.get('/rooms/:roomId', (req, res) => {
 });
 
 app.post('/createRoom', (req, res) => {
+  console.log("Req recivida createRoom")
+
     const roomInfo = req.body;
     const roomCreated = Room.createRoomFromJSON(roomInfo);
     rooms[roomCreated.roomId] = roomCreated;
