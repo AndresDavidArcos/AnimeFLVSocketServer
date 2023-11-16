@@ -19,6 +19,7 @@ coverage/
 .svn/
 .git/
 .hg/
+.idea/
 
 # Logs y archivos temporales
 logs/

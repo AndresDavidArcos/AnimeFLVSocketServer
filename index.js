@@ -19,13 +19,10 @@ const rooms = {};
 // rooms['maraton de one piece'] = new Room("UUID-GENERATED-STRING", "maraton de one piece", "female", "zoro", "https://www3.animeflv.net/ver/rurouni-kenshin-meiji-kenkaku-romantan-2023-17", "SW", true, 5);
 
 app.get('/rooms', (req, res) => {
-  console.log("Req recivida rooms")
   res.status(200).send(rooms);
 });
 
 app.get('/rooms/:roomId', (req, res) => {
-  console.log("Req recivida /rooms/:roomId")
-
   const {roomId} = req.params;
   const thisRoom = rooms[roomId];
   if(thisRoom){
@@ -36,8 +33,6 @@ app.get('/rooms/:roomId', (req, res) => {
 });
 
 app.post('/createRoom', (req, res) => {
-  console.log("Req recivida createRoom")
-
     const roomInfo = req.body;
     const roomCreated = Room.createRoomFromJSON(roomInfo);
     rooms[roomCreated.roomId] = roomCreated;
@@ -64,7 +59,6 @@ io.on('connection',  (socket)=>{
     console.log(socket.id, "has disconnected")
     const [, thisRoomId] = socket.rooms;
     if(thisRoomId){
-
       const thisRoom = rooms[thisRoomId];
       thisRoom.decreaseUserCount();
       if(thisRoom.usersConnected === 0){
@@ -136,14 +130,14 @@ io.on('connection',  (socket)=>{
     if(thisRoom){
       switch (data.type) {
         case 'play':
-          io.in(currentRoom).emit('updateVideoState', {type: 'play', senderId: socket.id, senderUsername: socket.data.username})
+            socket.to(currentRoom).emit('updateVideoState', {type: 'play', senderUsername: socket.data.username})
           break;
           case 'pause':
-            io.in(currentRoom).emit('updateVideoState', {type: 'pause', senderId: socket.id, senderUsername: socket.data.username})
+            socket.to(currentRoom).emit('updateVideoState', {type: 'pause', senderUsername: socket.data.username})
           break;
           case 'time':
           const time = data.time;
-          io.in(currentRoom).emit('updateVideoState', {type: 'time', time, senderId: socket.id, senderUsername: socket.data.username})
+            socket.to(currentRoom).emit('updateVideoState', {type: 'time', time, senderUsername: socket.data.username})
           break;
         default:
           break;
@@ -153,4 +147,19 @@ io.on('connection',  (socket)=>{
     }
 
   })
+
+  socket.on('updateVideoParty', (url, videoProvider, sendResponse) => {
+    const [, roomId] = socket.rooms;
+    const thisRoom = rooms[roomId];
+    if(thisRoom){
+      thisRoom.url = url;
+      thisRoom.videoProvider = videoProvider;
+      const senderUsername = socket.data.username
+      socket.to(roomId).emit('videoPartyHasChanged', url, roomId, senderUsername)
+      sendResponse(true);
+    }else{
+      sendResponse(false);
+    }
+  })
+
 })
