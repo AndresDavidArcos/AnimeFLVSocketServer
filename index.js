@@ -2,7 +2,7 @@ const Room = require('./classes/Room');
 const express = require('express');
 const app = express();
 const cors = require("cors");
-const socketio = require('socket.io')
+const socketio = require('socket.io');
 
 const corsOptions = {
   origin: '*', // Allow requests from any origin
@@ -16,8 +16,6 @@ app.use(express.json());
 
 const port = process.env.PORT || 9000;
 const rooms = {};
-// rooms['maraton de one piece'] = new Room("UUID-GENERATED-STRING", "maraton de one piece", "female", "zoro", "https://www3.animeflv.net/ver/rurouni-kenshin-meiji-kenkaku-romantan-2023-17", "SW", true, 5);
-
 app.get('/rooms', (req, res) => {
   res.status(200).send(rooms);
 });
@@ -26,7 +24,11 @@ app.get('/rooms/:roomId', (req, res) => {
   const {roomId} = req.params;
   const thisRoom = rooms[roomId];
   if(thisRoom){
-    res.status(200).send(thisRoom);
+    if(thisRoom.usersConnected >= thisRoom.usersLimit) {
+      res.status(400).send({message: "La room a la que intenta entrar ya esta llena."})
+    }else{
+      res.status(200).send(thisRoom);
+    }
   }else{
     res.status(404).send({message: "La room a la que tratas de acceder no existe"})
   }
@@ -71,30 +73,36 @@ io.on('connection',  (socket)=>{
   socket.on("joinRoom", (roomId, username, userType, sendResponse) => {
     const thisRoom = rooms[roomId];
     if(thisRoom){
-      thisRoom.increaseUserCount()   
-      //leave all rooms, because the client can only be in one room
-      const clientRooms = socket.rooms;
-      let i = 0;
-      clientRooms.forEach(room=>{
-      //we don't want to leave the socket's personal room which is guaranteed to be first
-      if(i!==0){
-        socket.leave(room);
-       }
-       i++;
-       })
-  
-       socket.join(thisRoom.roomId);
-       socket.data.username = username;
-       socket.data.userType = userType;
-       sendResponse({
-         history: thisRoom.history,
-         videoProvider: thisRoom.videoProvider,
-         host: thisRoom.username,
-         url: thisRoom.url,
-         roomId: thisRoom.roomId
-       })
+      if(thisRoom.usersConnected >= thisRoom.usersLimit){
+        sendResponse({type: "error", message: "La room a la que intenta entrar ya esta llena."})
+      }else{
+        thisRoom.increaseUserCount()
+        //leave all rooms, because the client can only be in one room
+        const clientRooms = socket.rooms;
+        let i = 0;
+        clientRooms.forEach(room=>{
+          //we don't want to leave the socket's personal room which is guaranteed to be first
+          if(i!==0){
+            socket.leave(room);
+          }
+          i++;
+        })
+
+        socket.join(thisRoom.roomId);
+        socket.data.username = username;
+        socket.data.userType = userType;
+        sendResponse({
+          history: thisRoom.history,
+          usersLimit: thisRoom.usersLimit,
+          videoProvider: thisRoom.videoProvider,
+          host: thisRoom.username,
+          url: thisRoom.url,
+          roomId: thisRoom.roomId
+        })
+      }
+
     }else{
-      sendResponse({type: "error", message: "La room a la que intenta entrar no existe"})
+      sendResponse({type: "error", message: "La room a la que intenta entrar no existe."})
     }
 
   })

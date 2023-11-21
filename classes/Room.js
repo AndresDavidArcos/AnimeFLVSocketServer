@@ -1,9 +1,10 @@
 class Room{
-    constructor(roomId, roomName, avatar, username, url, videoProvider,lock = true, usersConnected = 0){
+    constructor(roomId, roomName, avatar, username, url, videoProvider, usersLimit = 6 ,lock = true, usersConnected = 0){
         this.roomId = roomId;
         this.roomName = roomName;
         this.lock = lock;
         this.avatar = avatar
+        this.usersLimit = usersLimit;
         this.history = [];
         this.username = username;
         this.usersConnected = usersConnected;
@@ -16,6 +17,7 @@ class Room{
           roomId,
           roomName,
           avatar,
+          usersLimit,
           username,
           url,
           videoProvider,
@@ -23,7 +25,7 @@ class Room{
           usersConnected
         } = roomInfo;
     
-        return new Room(roomId,roomName, avatar, username, url, videoProvider, lock, usersConnected);
+        return new Room(roomId,roomName, avatar, username, url, videoProvider, usersLimit,lock, usersConnected);
       }    
 
     addMessage(message){
